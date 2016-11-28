@@ -18,6 +18,11 @@ class Stage:
         gridsize  = (grid_width, grid_width*3//2)
         self.block_array = BlockArray(gridsize, self.rect)
    
+    @property
+    def gridsize(self):
+        return self.block_array.dims
+        
+        
     def update(self):
         pass
     
@@ -47,11 +52,19 @@ class Stage:
         blk.disable()
         self.block_array[pos] = blk
     
-    @property
-    def gridsize(self):
-        return self.block_array.dims
-    
     def obstructs(self, pos):
         return not 0 <= pos[0] < self.block_array.dims[0] or \
                not 0 <= pos[1] < self.block_array.dims[1] or \
                self.block_array.obstruction_at(pos)
+               
+    def get_full_rows(self, rows=None):
+        rows = sorted(rows) if rows else range(self.gridsize[1])
+        return [r for r in rows if all(self.block_array[r])]
+    
+    def delete(self, rows):
+        for r in rows:
+            self.block_array.delete_row(r)
+    
+    def anim_delete(self, rows, done):
+        self.delete(rows)
+        done()

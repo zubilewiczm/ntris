@@ -1,2 +1,4 @@
 ntris/__pycache__/
+tests/__pycache__/
+ntris/blocks_bkp.py
 block.svg

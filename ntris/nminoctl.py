@@ -90,9 +90,12 @@ class nMinoCtl:
     
     def rest(self):
         x,y = self.pos
+        ret = []
         for px,py in self.nmino:
             self.stage.add_obstacle((px+x,py+y), blk.Block(self.nmino.color))
+            ret.append((px+x,py+y))
         self.nmino = None
+        return ret
     
     def draw(self, surface):
         bounds = self.nmino.bounds()
