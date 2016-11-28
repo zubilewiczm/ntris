@@ -145,7 +145,7 @@ class BlockArray:
     
     def delete_row(self, i):
         del self.array[i]
-        self.array[:0] = [[None]*sx]
+        self.array[:0] = [[None]*self.size[0]]
     
     def obstruction_at(self, coord):
         cx, cy = coord
