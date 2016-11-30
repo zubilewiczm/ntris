@@ -67,19 +67,24 @@ class Block:
     def draw(self, surface):
         wh = surface.get_size()
         img  = pygame.transform.smoothscale(Block.LOOKS, wh)
-        tint = pygame.Surface(wh, 0, Block.LOOKS)
-        tint.fill(self.col)
-        if self.shaded:
-            tint.fill((200,200,200), None, BLEND_RGB_MULT)
+        if not self.flashing:
+            tint = pygame.Surface(wh, 0, Block.LOOKS)
+            tint.fill(self.col)
+            if self.shaded:
+                tint.fill((200,200,200), None, BLEND_RGB_MULT)
+            else:
+                mask = pygame.transform.smoothscale(Block.MASK, wh)
+                tint.blit(mask, (0,0))
+                tint.set_alpha()
+            img.blit(tint, (0,0), None, BLEND_RGB_MULT)
         else:
-            mask = pygame.transform.smoothscale(Block.MASK, wh)
-            tint.blit(mask, (0,0))
-            tint.set_alpha()
-        img.blit(tint, (0,0), None, BLEND_RGB_MULT)
+            img.fill([255,255,255,200])
         surface.blit(img, (0,0))
         
     def disable(self):
         self.shaded = True
+    def flash(self):
+        self.flashing^= True
             
     def get_color(self):
         return self.col

@@ -1,41 +1,45 @@
 import pygame
+import ui
 import utils
 from blocks import Block, BlockArray
 
-class Stage:
+class Stage(ui.Area):
     
-    DEF_BC = [255,255,255]
+    class StageRowPending:
+        def __init__(self, rows, done, stage):
+            self.rows = rows
+            self.step = 0
+            def callback():
+                for r in rows:
+                    for b in stage.block_array[r]:
+                        if b:
+                            b.flash()
+                if self.step == 4:
+                    done()
+                    self.timer.deactivate()
+                    stage.pending.remove(self)
+                    stage.delete_rows(self.rows)
+                self.step+= 1
+            self.timer = utils.NormalTimer(callback, 70.0)
+            self.timer.activate()
+            
+        def update(self, dt):
+            self.timer.tick(dt)
     
-    def __init__(self, pos, width, grid_width, **kwargs):
+    
+    
+    def __init__(self, pos, width, grid_width):
         if grid_width % 2 == 1:
             raise ValueError("grid_width isn't even! (grid_width={})"
                 .format(width, grid_width))
-        self.rect   = pygame.Rect(pos[0], pos[1], width, width*3//2)
-        self.width  = self.rect.w
-        self.height = self.rect.h
-        self.border_color  = kwargs.get("bc", Stage.DEF_BC)
-        self.border_color2 = [x//2 for x in self.border_color]
+                
+        self.rect = pygame.Rect(pos[0], pos[1], width, width*3//2)
+        super().__init__(self.rect)
+        
         gridsize  = (grid_width, grid_width*3//2)
         self.block_array = BlockArray(gridsize, self.rect)
-   
-    @property
-    def gridsize(self):
-        return self.block_array.dims
-        
-        
-    def update(self):
-        pass
-    
-    def draw(self, screen):
-        temprect = utils.rect_inflate(self.rect, 2, 2)
-        pygame.draw.rect(screen, self.border_color2, temprect, 1)
-        temprect = utils.rect_inflate(temprect, -1, -1)
-        pygame.draw.rect(screen, self.border_color, temprect, 1)
-        temprect = utils.rect_inflate(temprect, -1, -1)
-        
-        for block, rect in self.block_array.with_rects(temprect):
-            block.draw(screen.subsurface(rect))
-            
+        self.pending = []
+
     def stage2screen(self, *args):
         """
         stage2screen(self, coords, size=(1,1))
@@ -61,10 +65,27 @@ class Stage:
         rows = sorted(rows) if rows else range(self.gridsize[1])
         return [r for r in rows if all(self.block_array[r])]
     
-    def delete(self, rows):
+    def delete_rows(self, rows):
         for r in rows:
             self.block_array.delete_row(r)
+            for p in self.pending:
+                for i in range(len(p.rows)):
+                    if p.rows[i] < i:
+                        p.rows[i]-= 1
     
     def anim_delete(self, rows, done):
-        self.delete(rows)
-        done()
+        self.pending.append(Stage.StageRowPending(rows, done, self))
+
+        
+    def update(self, dt):
+        for p in self.pending:
+            p.update(dt)
+    
+    def draw(self, screen):
+        super().draw(screen)
+        for block, rect in self.block_array.with_rects(self.rect):
+            block.draw(screen.subsurface(rect))          
+
+    @property
+    def gridsize(self):
+        return self.block_array.dims

@@ -34,7 +34,7 @@ class nMinoCtl:
               "while second a Stage")
         self.nmino = nmino
         self.stage = stage
-        if not self.set_pos(Ref.TOPCENTER, (stage.gridsize[0]//2, 0)):
+        if not self.set_pos(Ref.TOPCENTER, (stage.gridsize[0]//2, stage.gridsize[1]-1)):
             raise GameOver
         
     def move(self, dir):
@@ -42,10 +42,10 @@ class nMinoCtl:
             raise ValueError("instance of Dir expected")
         px,py = self.pos
         translations = {
-            1 : (lambda x,y : (x,y+1)),
+            1 : (lambda x,y : (x,y-1)),
             2 : (lambda x,y : (x-1,y)),
             3 : (lambda x,y : (x+1,y)),
-            4 : (lambda x,y : (x,y-1))
+            4 : (lambda x,y : (x,y+1))
         }
         return self.set_pos(Ref.MIDCENTER, translations[dir.value](px,py))
         
@@ -60,13 +60,15 @@ class nMinoCtl:
         elif ref.value % 3 == 0: #right
             x = pos[0] - bounds.right + 1
         if (ref.value-1) // 3 == 0: #bottom
-            y = pos[1] - bounds.bottom + 1
+            y = pos[1] + bounds.bottom - 1
         elif (ref.value-1) // 3 == 1: #mid
             y = pos[1]
         elif (ref.value-1) // 3 == 2: #top
-            y = pos[1] - bounds.top
-        if self.pos_allowed(x,y):
+            y = pos[1] + bounds.top
+        X,Y = x, self.stage.gridsize[1]-y-1
+        if self.pos_allowed(X,Y):
             self.pos = (x,y)
+            self.pos_stage = (X,Y)
             return True
         else:
             return False
@@ -76,7 +78,7 @@ class nMinoCtl:
             raise ValueError("instance of Spin expected")
         rot = self.nmino.rotate(spin == Spin.CLOCKWISE)
         tmp, self.nmino = self.nmino, rot
-        if self.pos_allowed(*self.pos):
+        if self.pos_allowed(*self.pos_stage):
             return True
         else:
             self.nmino = tmp
@@ -89,7 +91,7 @@ class nMinoCtl:
         return True
     
     def rest(self):
-        x,y = self.pos
+        x,y = self.pos_stage
         ret = []
         for px,py in self.nmino:
             self.stage.add_obstacle((px+x,py+y), blk.Block(self.nmino.color))
@@ -99,7 +101,7 @@ class nMinoCtl:
     
     def draw(self, surface):
         bounds = self.nmino.bounds()
-        x,y = self.pos
+        x,y = self.pos_stage
         x += bounds.x
         y += bounds.y
         size = bounds.size

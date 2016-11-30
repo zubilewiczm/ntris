@@ -166,8 +166,8 @@ class nTrisPlayerCtl:
         self.lastmoves = (None, None)
         self.nmc = None
         self.movetimer = utils.NormalTimer(self._move_dn, freq)
-        self.lrtimer   = utils.NiceTimer(self._move_lr, freq*0.3, 0.7, 400.0)
-        self.downtimer = utils.NiceTimer(self._move_dn, freq*0.2, 0.7, 400.0)
+        self.lrtimer   = utils.NiceTimer(self._move_lr, freq*0.3, 0.7, 300.0)
+        self.downtimer = utils.NiceTimer(self._move_dn, freq*0.2, 0.7, 300.0)
         self.timers = (self.lrtimer, self.downtimer, self.movetimer)
         self.gameover = False
         self.placed = placed_cb
@@ -274,7 +274,7 @@ class nTris(nTrisBase):
             self.stage.anim_delete(full, done = after)
         else:
             player.grant_points(nTris.PTS_PLACE)
-        self.feed_nmino(player)
+            self.feed_nmino(player)
     
     def feed_nmino(self, player):
         nm = self.nmg.generate()
@@ -285,6 +285,7 @@ class nTris(nTrisBase):
             player.game_over()
 
     def update(self, dt):
+        self.stage.update(dt)
         for p in self.players:
             p.update(dt)
     
