@@ -28,9 +28,6 @@ def noop(*args, **kwargs):
 def not_implemented(*args, **kwargs):
     raise NotImplementedError()
 
-def rect_inflate(rect, x,y):
-    return pygame.Rect(rect.left-x,rect.top-y,rect.width+2*x,rect.height+2*y)
-
 def hsv(i,n, s,v):
     h = 360*i/n
     c = pygame.Color(255)
@@ -91,7 +88,6 @@ class NiceTimer(TimerTrigger):
     
     def change_freq(self, freq, q=None):
         self.def_freq = freq
-        self.onset = 2*freq
         self.q = q if q else self.q
         return self
         

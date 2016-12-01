@@ -23,28 +23,7 @@
 import stage as stg
 import nmino as nm
 import blocks as blk
-from enum import Enum
-
-class Dir(Enum):
-    DOWN  = 1
-    LEFT  = 2
-    RIGHT = 3
-    UP = 4
-
-class Ref(Enum):
-    BOTTOMLEFT   = 1
-    BOTTOMCENTER = 2
-    BOTTOMRIGHT  = 3
-    MIDLEFT      = 4
-    MIDCENTER    = 5
-    MIDRIGHT     = 6
-    TOPLEFT      = 7
-    TOPCENTER    = 8
-    TOPRIGHT     = 9
-
-class Spin(Enum):
-    CLOCKWISE = 1
-    COUNTERCLOCKWISE = 2
+from position import Dir, Spin, Ref
 
 class GameOver(Exception):
     pass

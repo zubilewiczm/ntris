@@ -25,6 +25,10 @@ import ui
 import utils
 from blocks import Block, BlockArray
 
+
+def stage_dims(width):
+    return (width, 3*width//2)
+
 class Stage(ui.Area):
     
     class StageRowPending:
@@ -55,11 +59,11 @@ class Stage(ui.Area):
             raise ValueError("grid_width isn't even! (grid_width={})"
                 .format(width, grid_width))
                 
-        self.rect = pygame.Rect(pos[0], pos[1], width, width*3//2)
-        super().__init__(self.rect)
+        rect = pygame.Rect(pos[0], pos[1], *stage_dims(width))
+        super().__init__(rect)
         
-        gridsize  = (grid_width, grid_width*3//2)
-        self.block_array = BlockArray(gridsize, self.rect)
+        gridsize  = stage_dims(grid_width)
+        self.block_array = BlockArray(gridsize, self._rect)
         self.pending = []
 
     def stage2screen(self, *args):
@@ -72,7 +76,7 @@ class Stage(ui.Area):
             coords : pair of indices
             size   : pair of positive ints
         """
-        return self.block_array.coords2rect(self.rect, *args)
+        return self.block_array.coords2rect(self._rect, *args)
     
     def add_obstacle(self, pos, blk):
         blk.disable()
@@ -105,7 +109,7 @@ class Stage(ui.Area):
     
     def draw(self, screen):
         super().draw(screen)
-        for block, rect in self.block_array.with_rects(self.rect):
+        for block, rect in self.block_array.with_rects(self._rect):
             block.draw(screen.subsurface(rect))          
 
     @property

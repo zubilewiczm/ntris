@@ -27,6 +27,8 @@ import stage
 import nmino
 import nminoctl
 import utils
+import position
+import ui
 from utils import noop, not_implemented
 
 from enum import Enum
@@ -118,16 +120,16 @@ class nTrisBase(Game):
         self.keymap = self.menu_keymap
     
     def init_msgs(self):
-        self.msgmap[nTrisMsg.P1_MOVE_LEFT]  = lambda dn : self.move(0, dn, nminoctl.Dir.LEFT)
-        self.msgmap[nTrisMsg.P1_MOVE_RIGHT] = lambda dn : self.move(0, dn, nminoctl.Dir.RIGHT)
-        self.msgmap[nTrisMsg.P1_MOVE_DOWN]  = lambda dn : self.move(0, dn, nminoctl.Dir.DOWN)
-        self.msgmap[nTrisMsg.P1_ROT_CW]     = lambda dn : self.rot(0, dn, nminoctl.Spin.CLOCKWISE)
-        self.msgmap[nTrisMsg.P1_ROT_CCW]    = lambda dn : self.rot(0, dn, nminoctl.Spin.COUNTERCLOCKWISE)
-        self.msgmap[nTrisMsg.P2_MOVE_LEFT]  = lambda dn : self.move(1, dn, nminoctl.Dir.LEFT)
-        self.msgmap[nTrisMsg.P2_MOVE_RIGHT] = lambda dn : self.move(1, dn, nminoctl.Dir.RIGHT)
-        self.msgmap[nTrisMsg.P2_MOVE_DOWN]  = lambda dn : self.move(1, dn, nminoctl.Dir.DOWN)
-        self.msgmap[nTrisMsg.P2_ROT_CW]     = lambda dn : self.rot(1, dn, nminoctl.Spin.CLOCKWISE)
-        self.msgmap[nTrisMsg.P2_ROT_CCW]    = lambda dn : self.rot(1, dn, nminoctl.Spin.COUNTERCLOCKWISE)
+        self.msgmap[nTrisMsg.P1_MOVE_LEFT]  = lambda dn : self.move(0, dn, position.Dir.LEFT)
+        self.msgmap[nTrisMsg.P1_MOVE_RIGHT] = lambda dn : self.move(0, dn, position.Dir.RIGHT)
+        self.msgmap[nTrisMsg.P1_MOVE_DOWN]  = lambda dn : self.move(0, dn, position.Dir.DOWN)
+        self.msgmap[nTrisMsg.P1_ROT_CW]     = lambda dn : self.rot(0, dn, position.Spin.CLOCKWISE)
+        self.msgmap[nTrisMsg.P1_ROT_CCW]    = lambda dn : self.rot(0, dn, position.Spin.COUNTERCLOCKWISE)
+        self.msgmap[nTrisMsg.P2_MOVE_LEFT]  = lambda dn : self.move(1, dn, position.Dir.LEFT)
+        self.msgmap[nTrisMsg.P2_MOVE_RIGHT] = lambda dn : self.move(1, dn, position.Dir.RIGHT)
+        self.msgmap[nTrisMsg.P2_MOVE_DOWN]  = lambda dn : self.move(1, dn, position.Dir.DOWN)
+        self.msgmap[nTrisMsg.P2_ROT_CW]     = lambda dn : self.rot(1, dn, position.Spin.CLOCKWISE)
+        self.msgmap[nTrisMsg.P2_ROT_CCW]    = lambda dn : self.rot(1, dn, position.Spin.COUNTERCLOCKWISE)
         self.msgmap[nTrisMsg.PAUSE]  = lambda dn : self.pause()
         self.msgmap[nTrisMsg.QUIT]   = lambda dn : self.quit()
         self.msgmap[nTrisMsg.ACCEPT] = lambda dn : self.ok()
@@ -187,7 +189,7 @@ class nTrisPlayerCtl:
         self.lastmoves = (None, None)
         self.nmc = None
         self.movetimer = utils.NormalTimer(self._move_dn, freq)
-        self.lrtimer   = utils.NiceTimer(self._move_lr, freq*0.3, 0.7, 300.0)
+        self.lrtimer   = utils.NiceTimer(self._move_lr, freq*0.3, 0.6, 300.0)
         self.downtimer = utils.NiceTimer(self._move_dn, freq*0.2, 0.7, 300.0)
         self.timers = (self.lrtimer, self.downtimer, self.movetimer)
         self.gameover = False
@@ -211,12 +213,12 @@ class nTrisPlayerCtl:
     
     def _move_dn(self):
         self.movetimer.reset()
-        if self.nmc and not self.nmc.move(nminoctl.Dir.DOWN):
+        if self.nmc and not self.nmc.move(position.Dir.DOWN):
             self.placed(self, self.nmc.rest())
     
     def move(self, dn, dir):
         if dn:
-            if dir != nminoctl.Dir.DOWN:
+            if dir != position.Dir.DOWN:
                 if self.nmc and not any(self.lastmoves):
                     self.nmc.move(dir)
                 self._set_lastmove(dir)
@@ -225,7 +227,7 @@ class nTrisPlayerCtl:
                 self.downtimer.activate()
                 self._move_dn()
         else:
-            if dir != nminoctl.Dir.DOWN:
+            if dir != position.Dir.DOWN:
                 self._del_lastmove(dir)
                 if not any(self.lastmoves):
                     self.lrtimer.deactivate()
@@ -259,22 +261,59 @@ class nTrisPlayerCtl:
     def update(self, dt):
         for t in self.timers:
             t.tick(dt)
-
+            
 class nTris(nTrisBase):
     
     DEF_FREQ  = 500.0
     PTS_PLACE = 10
     PTS_ROW   = 100
     
+    STAGE_TOP     = 30
+    STAGE_XOFFSET = 30
+    STAGE_WIDTH   = 300
+    
+    UI_MAIN_TOP = 15
+    UI_MAIN_OFFSET = 20
+    UI_LVL_SIZE = (60,40)
+    UI_SCORE_XOFFSET = 30
+    UI_SCORE_YOFFSET = 15
+    UI_PTS_OFFSET = 10
+    UI_OFFSTAGE_OFFSET = 15
+    
     def __init__(self, screen):
         super().__init__(screen)
         self.switch_keymap_game()
-        self.freq = nTris.DEF_FREQ
-        self.stage = stage.Stage((30,30), 300, 10)
+        self.freq = self.DEF_FREQ
+        self.stage_axis = self.screen.get_size()[0]
+        self.stage = stage.Stage((self.STAGE_TOP,self.STAGE_XOFFSET),
+                                 self.STAGE_WIDTH, 10)
         self.player = nTrisPlayerCtl(self.freq, self.placed)
         self.players = [self.player]
         self.nmg = nmino.nMinoGen(4)
         self.feed_nmino(self.player)
+        self.lvl = 1
+        
+        # texts
+        rect = self.stage.rect
+        rect.topleft = (self.UI_MAIN_OFFSET, rect.bottom + self.UI_MAIN_TOP)
+        rect.size = self.UI_LVL_SIZE
+        self.text_ilvl = ui.Text("LVL",
+                                 rect.topleft,
+                                 color = [200,200,200])
+        self.text_vlvl = ui.Text(str(self.lvl),
+                                 rect.bottomright,
+                                 ref   = position.Ref.BOTTOMRIGHT,
+                                 scale = (3,4),
+                                 shade = True)
+        self.text_vpts = ui.ScoreText((self.stage_axis - self.UI_SCORE_XOFFSET,
+                                       rect.top + self.UI_SCORE_YOFFSET),
+                                      ref = position.Ref.TOPRIGHT,
+                                      scale = (2,2),
+                                      shade = True)
+        rect_score = self.text_vpts.rect
+        self.text_ipts = ui.Text("PTS",
+                                 (rect_score.left - self.UI_PTS_OFFSET, rect.top),
+                                 color = [200,200,200])
     
     def move(self, player, keydown, dir):
         if player < len(self.players):
@@ -291,10 +330,10 @@ class nTris(nTrisBase):
         if full:
             def after():
                 self.feed_nmino(player)
-                player.grant_points(nTris.PTS_ROW)
+                player.grant_points(self.PTS_ROW*len(full))
             self.stage.anim_delete(full, done = after)
         else:
-            player.grant_points(nTris.PTS_PLACE)
+            player.grant_points(self.PTS_PLACE)
             self.feed_nmino(player)
     
     def feed_nmino(self, player):
@@ -309,6 +348,7 @@ class nTris(nTrisBase):
         self.stage.update(dt)
         for p in self.players:
             p.update(dt)
+        self.text_vpts.score = self.player.score
     
     def draw(self, screen):
         screen.blit(self.bg, (0,0))
@@ -316,3 +356,8 @@ class nTris(nTrisBase):
         for p in self.players:
             if p.nmc:
                 p.nmc.draw(screen)
+        
+        self.text_ilvl.draw(screen)
+        self.text_vlvl.draw(screen)
+        self.text_vpts.draw(screen)
+        self.text_ipts.draw(screen)

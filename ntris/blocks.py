@@ -56,7 +56,7 @@ class Block:
     Properties:
         color: rw
     """
-    LOOKS = pygame.image.load("block.png")
+    LOOKS = pygame.image.load("assets/sprites/block.png")
     MASK  = pygame.Surface(LOOKS.get_size(), 0, LOOKS)
     block_sprite_init(LOOKS, MASK)
 
