@@ -90,7 +90,7 @@ class Stage(ui.Area):
     def get_full_rows(self, rows=None):
         rows = sorted(rows) if rows else range(self.gridsize[1])
         return [r for r in rows if all(self.block_array[r])]
-    
+        
     def delete_rows(self, rows):
         for r in rows:
             self.block_array.delete_row(r)

@@ -23,6 +23,7 @@
 import pygame
 from pygame.locals import *
 import position
+import utils
 
 pygame.font.init()
 

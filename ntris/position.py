@@ -57,7 +57,7 @@ def rect_align(rect, pos, ref):
     if (ref.value-1) // 3 == 0: #bottom
         rect.bottom  = pos[1]
     elif (ref.value-1) // 3 == 1: #mid
-        rect.center  = pos[1]
+        rect.centery = pos[1]
     elif (ref.value-1) // 3 == 2: #top
         rect.top     = pos[1]
     return rect

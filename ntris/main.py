@@ -29,7 +29,7 @@ import blocks as blk
 from game import nTris
 import nmino
 
-SCR_WIDTH = 420
+SCR_WIDTH = 500
 SCR_HEIGHT = 540
 FPS = 60
 

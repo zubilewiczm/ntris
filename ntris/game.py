@@ -214,7 +214,8 @@ class nTrisPlayerCtl:
     def _move_dn(self):
         self.movetimer.reset()
         if self.nmc and not self.nmc.move(position.Dir.DOWN):
-            self.placed(self, self.nmc.rest())
+            col = self.nmc.nmino.color
+            self.placed(self, self.nmc.rest(), col)
     
     def move(self, dn, dir):
         if dn:
@@ -293,27 +294,36 @@ class nTris(nTrisBase):
         self.feed_nmino(self.player)
         self.lvl = 1
         
-        # texts
+        self.init_texts_1p()
+        
+    
+    def init_texts_1p(self):
         rect = self.stage.rect
         rect.topleft = (self.UI_MAIN_OFFSET, rect.bottom + self.UI_MAIN_TOP)
         rect.size = self.UI_LVL_SIZE
+        
         self.text_ilvl = ui.Text("LVL",
                                  rect.topleft,
                                  color = [200,200,200])
+        
         self.text_vlvl = ui.Text(str(self.lvl),
                                  rect.bottomright,
                                  ref   = position.Ref.BOTTOMRIGHT,
                                  scale = (3,4),
                                  shade = True)
+        
         self.text_vpts = ui.ScoreText((self.stage_axis - self.UI_SCORE_XOFFSET,
                                        rect.top + self.UI_SCORE_YOFFSET),
                                       ref = position.Ref.TOPRIGHT,
                                       scale = (2,2),
                                       shade = True)
+        
         rect_score = self.text_vpts.rect
         self.text_ipts = ui.Text("PTS",
                                  (rect_score.left - self.UI_PTS_OFFSET, rect.top),
                                  color = [200,200,200])
+        
+        self.textcollection_small = utils.TimedSet()
     
     def move(self, player, keydown, dir):
         if player < len(self.players):
@@ -324,17 +334,38 @@ class nTris(nTrisBase):
             if player < len(self.players):
                 self.players[player].rot(spin)
     
-    def placed(self, player, loc):
+    def placed(self, player, loc, color):
         rows = {y for x,y in loc}
+        
+        rows_min = max(rows) + 0.5
+        t        = rows_min/self.stage.gridsize[1] #[0,1)
+        rect     = self.stage.rect
+        y        = int(t*rect.bottom + (1-t)*rect.top)
+        textpos = (self.stage.rect.right + self.UI_OFFSTAGE_OFFSET, y)
+        
         full = self.stage.get_full_rows(rows)
         if full:
+            pts = self.PTS_ROW*len(full)
+            col = color
+            time = 1000
             def after():
                 self.feed_nmino(player)
-                player.grant_points(self.PTS_ROW*len(full))
+                player.grant_points(pts)
+                text    = ui.Text(str(pts), textpos,
+                              color = col,
+                              ref = position.Ref.MIDLEFT)
+                self.textcollection_small.add(text, time)
             self.stage.anim_delete(full, done = after)
         else:
+            pts = self.PTS_PLACE
+            col = [255,255,255]
+            time = 500
             player.grant_points(self.PTS_PLACE)
             self.feed_nmino(player)
+            text    = ui.Text(str(pts), textpos,
+                              color = col,
+                              ref = position.Ref.MIDLEFT)
+            self.textcollection_small.add(text, time)
     
     def feed_nmino(self, player):
         nm = self.nmg.generate()
@@ -349,6 +380,7 @@ class nTris(nTrisBase):
         for p in self.players:
             p.update(dt)
         self.text_vpts.score = self.player.score
+        self.textcollection_small.tick(dt)
     
     def draw(self, screen):
         screen.blit(self.bg, (0,0))
@@ -361,3 +393,5 @@ class nTris(nTrisBase):
         self.text_vlvl.draw(screen)
         self.text_vpts.draw(screen)
         self.text_ipts.draw(screen)
+        for txt in self.textcollection_small:
+            txt.draw(screen)

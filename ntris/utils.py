@@ -99,3 +99,37 @@ class NormalTimer(TimerTrigger):
         self.def_freq = freq
         self.onset = freq
         return self
+
+class MultiShot(NormalTimer):
+    def __init__(self, trigger, freq, n=1):
+        self.max = n
+        self.n = 0
+        def real_trigger():
+            if self.n < self.max:
+                trigger()
+                self.n+= 1
+            else:
+                self.deactivate()
+        super().__init__(real_trigger, freq)
+
+        
+        
+class TimedSet(set):
+    def add(self, x, time, trigger=lambda: None):
+        t = time if isinstance(time, TimerTrigger) else MultiShot(trigger, time)
+        t.activate()
+        super().add((x,t))
+        
+    def tick(self, dt):
+        s = set()
+        for x,t in super().__iter__():
+            if not t:
+                s.add((x,t))
+            else:
+                t.tick(dt)
+        for z in s:
+            self.remove(z)
+    
+    def __iter__(self):
+        for x,t in super().__iter__():
+            yield x
