@@ -153,7 +153,6 @@ class nTrisBase(Game):
         self.game_keymap[K_SLASH]  = nTrisMsg.P2_ROT_CW
         self.game_keymap[K_p]      = nTrisMsg.PAUSE
         self.game_keymap[K_ESCAPE] = nTrisMsg.QUIT
-        self.game_keymap[K_SPACE]  = nTrisMsg.DEBUG
     
     def init_menu_keymap(self):
         self.menu_keymap = dict()
@@ -533,7 +532,7 @@ class nTris(nTrisBase):
     
         def __init__(self, game, gamestate):
             self.game = game
-            self.game.keymap = self.game.menu_keymap
+            self.game.switch_keymap_menu()
             self.gamestate = gamestate
             self.prevscreen = pygame.Surface(self.game.screen.get_size())
             self.gamestate.draw(self.prevscreen)
@@ -617,11 +616,18 @@ class nTris(nTrisBase):
                     self.text_scores.append([text1, text2, text3])
             pos = position.rect_lerp(rect, 0.50, 0.8)
             self.text_esc = ui.Text(
-                "Press ESC to quit!",
+                "Press ESC to quit",
                 pos,
                 scale = (2,2),
                 shade = True,
                 ref   = position.Ref.MIDCENTER
+            )
+            self.text_enter = ui.Text(
+                "or Enter to play again!",
+                self.text_esc.rect.move(0,5).midbottom,
+                scale = (2,2),
+                shade = True,
+                ref   = position.Ref.TOPCENTER
             )
             if max_score > self.game.hiscore:
                 self.game.hiscore = max_score
@@ -668,13 +674,46 @@ class nTris(nTrisBase):
                         text.draw(surface)
             if self.anim_phase == 5:
                 self.text_esc.draw(surface)
+                self.text_enter.draw(surface)
+        
+        def ok(self, dn):
+            self.game.state = self.game.GameState(self.game)
                 
+                
+    class MenuState:
+        
+        def __init__(self, game):
+            self.game = game
+            self.game.switch_keymap_menu()
+            self.text = ui.Text("nTris",
+                position.rect_lerp(self.game.screen.get_rect(), 0.5, 0.2),
+                scale = (6,6),
+                shade = True,
+                ref   = position.Ref.MIDCENTER
+            )
+            self.text2 = ui.Text("Press Enter to start!",
+                position.rect_lerp(self.game.screen.get_rect(), 0.5, 0.8),
+                scale = (2,2),
+                shade = True,
+                ref   = position.Ref.MIDCENTER
+            )
+        
+        def draw(self, surface):
+            self.text.draw(surface)
+            self.text2.draw(surface)
+        
+        def update(self, dt):
+            pass
+        
+        def ok(self, dn):
+            self.game.state = self.game.GameState(self.game)
+    
     
     # nTris
     def __init__(self, screen):
         super().__init__(screen)
         self.init_sounds()
-        self.state = self.GameState(self)
+        self.state = self.MenuState(self)
         self.hiscore = 5000
         self.parse_settings()
     
