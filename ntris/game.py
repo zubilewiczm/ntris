@@ -33,6 +33,8 @@ import ui
 from utils import noop, not_implemented
 
 from enum import Enum
+from os.path import expanduser, isfile
+import re
 
 class Game:
 
@@ -84,6 +86,8 @@ class Game:
     evt_mouseup   = noop
     evt_mousedown = noop
     
+    def finalize(self):
+        pass
 
 class nTrisMsg(Enum):
     P1_MOVE_LEFT  = 0,
@@ -619,6 +623,9 @@ class nTris(nTrisBase):
                 shade = True,
                 ref   = position.Ref.MIDCENTER
             )
+            if max_score > self.game.hiscore:
+                self.game.hiscore = max_score
+
         
         def update(self, dt):
             for u in self.upd_list:
@@ -668,7 +675,8 @@ class nTris(nTrisBase):
         super().__init__(screen)
         self.init_sounds()
         self.state = self.GameState(self)
-        self.hiscore = 2500
+        self.hiscore = 5000
+        self.parse_settings()
     
     def init_sounds(self):
         try:
@@ -692,9 +700,35 @@ class nTris(nTrisBase):
         for name, s in self.sounds.items():
             s.set_volume(vol*self.sound_rel_volumes.get(name, 1.0))
     
+    def parse_settings(self):
+        parser = re.compile(r"^([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*([0-9]+)\s*$")
+        whspce = re.compile(r"^\s*(?:#.*)?$")
+        file = expanduser("~/.ntris-settings")
+        if isfile(file):
+            with open(file, "r") as f:
+                for line in f:
+                    m = parser.match(line)
+                    if m:
+                        if m.group(1) == "hiscore":
+                            self.hiscore = int(m.group(2))
+                        else:
+                            raise Exception("read unknown setting "+m.group(1))
+                    else:
+                        if not whspce.match(line):
+                            raise Exception("garbage in settings file")
+    
+    def save_settings(self):
+        file = expanduser("~/.ntris-settings")
+        with open(file, "w") as f:
+            f.write("# Generated automagically, do not modify!\n")
+            f.write("hiscore = "+str(self.hiscore)+"\n")
+    
     def draw(self, screen):
         screen.blit(self.bg, (0,0))
         self.state.draw(screen)
+        
+    def finalize(self):
+        self.save_settings()
     
     delegate2state = {
         "update",

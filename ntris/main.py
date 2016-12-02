@@ -52,6 +52,7 @@ def main():
                 game.event(event)
         game.tick(dt)
         pygame.display.flip()
+    game.finalize()
     pygame.quit()
 
 if __name__ == "__main__":
