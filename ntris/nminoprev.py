@@ -43,7 +43,11 @@ class nMinoPrev(ui.Area):
         
     def get(self):
         ret = self.nmino
-        self.nmino = self.nminogen.generate()
+        self.put(self.nminogen.generate())
+        return ret
+    
+    def put(self, nmino):
+        self.nmino = nmino
         
         max = self.nminogen.max_size()
         temprect = position.rect_inflate(self._rect, -self.margin, -self.margin)
@@ -55,4 +59,4 @@ class nMinoPrev(ui.Area):
         bounds.center = self._rect.center
         
         self._draw_rect = bounds
-        return ret
+        

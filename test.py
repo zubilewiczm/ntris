@@ -56,3 +56,39 @@ def name(n):
                 s = s[1:]
         ret = ret[0:-1]+"IS"
         return ret
+
+class Test:
+    
+    class State:
+        def __init__(self):
+            self.n = 0
+            print("init")
+        
+        def update(self, dt):
+            print("State update")
+        
+    def __init__(self):
+        self.s = Test.State()
+        
+    delegate2state = {
+            "update",
+            "move",
+            "rot",
+            "pause",
+            "quit",
+            "select",
+            "debug",
+            "ok"
+    }
+    
+    def move(self, x):
+        print("self move")
+    
+    def __getattribute__(self, name):
+        if name in Test.delegate2state:
+            try:
+                return self.s.__getattribute__(name)
+            except AttributeError:
+                return super().__getattribute__(name)
+        else:
+            return super().__getattribute__(name)

@@ -31,15 +31,19 @@ class Area:
     
     BD_COL  = [255,255,255]
     BD_COL2 = [x//2 for x in BD_COL]
+    BG_COL  = [0, 0, 0]
 
-    def __init__(self, rect):
+    def __init__(self, rect, bg=None):
         self._rect = pygame.Rect(rect)
+        self.bg = bg if bg else self.BG_COL
+        self.bg = pygame.Color(*self.bg)
     
     def draw(self, screen):
         temprect = position.rect_inflate(self._rect, 2, 2)
         pygame.draw.rect(screen, Area.BD_COL2, temprect, 1)
         temprect = position.rect_inflate(temprect, -1, -1)
         pygame.draw.rect(screen, Area.BD_COL, temprect, 1)
+        screen.subsurface(self._rect).fill(self.bg)
     
     @property
     def rect(self):
@@ -140,15 +144,23 @@ class FlashingText(Text):
     def __init__(self, txt, pos, **kwargs):
         super().__init__(txt, pos, **kwargs)
         self.timer = kwargs.get("timer", utils.MultiShot(lambda t:None, 200, 7))
+        self.color2 = kwargs.get("color2", None)
+        if self.color2 is not None:
+            self.color2 = pygame.Color(*self.color2)
         self.timer.hook(lambda t: self.action(t))
-        self.render = True
+        self.flashing = False
     
     def action(self, timer):
-        self.render ^= True
+        self.flashing ^= True
         
     def draw(self, surface):
-        if self.render:
+        if not self.flashing:
             super().draw(surface)
+        elif self.color2 is not None:
+            col_old = self.color
+            self.color = self.color2
+            super().draw(surface)
+            self.color = col_old
     
     def flash(self):
         self.timer.reset().activate()

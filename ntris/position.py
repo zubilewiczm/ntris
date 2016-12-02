@@ -64,3 +64,8 @@ def rect_align(rect, pos, ref):
 
 def rect_inflate(rect, x,y):
     return pygame.Rect(rect.left-x,rect.top-y,rect.width+2*x,rect.height+2*y)
+
+def rect_lerp(rect, x,y):
+    ix = rect.left*(1-x) + rect.right*x
+    iy = rect.top*(1-y) + rect.bottom*y
+    return int(ix),int(iy)
