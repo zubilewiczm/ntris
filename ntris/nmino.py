@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import blocks as blk
-import utils
+import ntris.blocks as blk
+import ntris.utils
 
 import pygame
 import random
@@ -248,7 +248,7 @@ class nMinoGen:
             self.update_colors()
     
     def update_colors(self):
-        self.colors = {p : utils.hsv(i, len(self.patterns), 100,100)
+        self.colors = {p : ntris.utils.hsv(i, len(self.patterns), 100,100)
             for i,p in enumerate(self.patterns)}
     
     def max_size(self):

@@ -1,0 +1,18 @@
+nTris -- klon Tetrisa z drobnym twistem.
+
+1) Zasady gry.
+
+  Przesuwaj i obracaj spadaj¹ce z nieba klocki w taki sposób, by u³o¿yæ z nich
+  poziom¹ liniê. Gdy ju¿ Ci siê uda, linia zniknie, a tobie zostan¹ przyznane
+  punkty. Jeœli klocki wype³ni¹ ca³¹ planszê, gra siê koñczy -- przetrwaj wiêc
+  jak najd³u¿ej!
+  
+2) Sterowanie.
+
+  A   : ruch w lewo
+  S   : ruch w dó³
+  D   : ruch w prawo
+  V   : obrót przeciwnie do ruchu wskazówek zegara
+  B   : obrót zgodnie z ruchem wskazówek zegara
+  P   : pauza
+  ESC : wyjœcie z gry

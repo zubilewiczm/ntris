@@ -21,11 +21,11 @@
 # SOFTWARE.
 
 import pygame
-import ui
-import position
-import nmino as nm
+import ntris.ui
+import ntris.position
+import ntris.nmino as nm
 
-class nMinoPrev(ui.Area):
+class nMinoPrev(ntris.ui.Area):
     
     def __init__(self, rect, gen, margin=10):
         super().__init__(rect)
@@ -50,7 +50,7 @@ class nMinoPrev(ui.Area):
         self.nmino = nmino
         
         max = self.nminogen.max_size()
-        temprect = position.rect_inflate(self._rect, -self.margin, -self.margin)
+        temprect = ntris.position.rect_inflate(self._rect, -self.margin, -self.margin)
         size = min(temprect.size)//max
         
         bounds = self.nmino.bounds()

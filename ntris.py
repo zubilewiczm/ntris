@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # MIT License
 # 
 # Copyright (c) 2016 Marcin Zubilewicz
@@ -20,38 +22,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import itertools
-
-import pygame
-from pygame.locals import *
-
-from ntris.game import nTris
-
-SCR_WIDTH = 500
-SCR_HEIGHT = 540
-FPS = 60
-
-def main():
-    pygame.mixer.pre_init(44100)
-    pygame.init()
-    screen = pygame.display.set_mode((SCR_WIDTH, SCR_HEIGHT))
-    pygame.display.set_caption("ntris")
-    
-    clock  = pygame.time.Clock()
-    game   = nTris(screen)
-    
-    going = True
-    while going:
-        dt = clock.tick(FPS)
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                going = False
-            else:
-                game.event(event)
-        game.tick(dt)
-        pygame.display.flip()
-    game.finalize()
-    pygame.quit()
-
-if __name__ == "__main__":
-    main()
+import ntris.main
+ntris.main.main()

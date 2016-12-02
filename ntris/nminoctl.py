@@ -20,10 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import stage as stg
-import nmino as nm
-import blocks as blk
-from position import Dir, Spin, Ref
+import ntris.stage as stg
+import ntris.nmino as nm
+import ntris.blocks as blk
+from ntris.position import Dir, Spin, Ref
 
 class GameOver(Exception):
     pass

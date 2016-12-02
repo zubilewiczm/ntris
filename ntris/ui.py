@@ -22,8 +22,8 @@
 
 import pygame
 from pygame.locals import *
-import position
-import utils
+import ntris.position
+import ntris.utils
 
 pygame.font.init()
 
@@ -39,9 +39,9 @@ class Area:
         self.bg = pygame.Color(*self.bg)
     
     def draw(self, screen):
-        temprect = position.rect_inflate(self._rect, 2, 2)
+        temprect = ntris.position.rect_inflate(self._rect, 2, 2)
         pygame.draw.rect(screen, Area.BD_COL2, temprect, 1)
-        temprect = position.rect_inflate(temprect, -1, -1)
+        temprect = ntris.position.rect_inflate(temprect, -1, -1)
         pygame.draw.rect(screen, Area.BD_COL, temprect, 1)
         screen.subsurface(self._rect).fill(self.bg)
     
@@ -57,10 +57,10 @@ class Text:
     def __init__(self, txt, pos, **kwargs):
         self.color  = kwargs.get("color", [255,255,255])
         self.scale  = kwargs.get("scale", None)
-        self.ref    = kwargs.get("ref",   position.Ref.TOPLEFT)
+        self.ref    = kwargs.get("ref",   ntris.position.Ref.TOPLEFT)
         self.shade  = kwargs.get("shade", False)
-        if not isinstance(self.ref, position.Ref):
-            raise ValueError("instance of position.Ref expected")
+        if not isinstance(self.ref, ntris.position.Ref):
+            raise ValueError("instance of ntris.position.Ref expected")
         self.text = txt
         self.pos = pos
         
@@ -70,7 +70,7 @@ class Text:
             w,h = textsurf.get_size()
             w,h = int(self.scale[0]*w), int(self.scale[1]*h)
             textsurf = pygame.transform.scale(textsurf, (w,h))
-        rect = position.rect_align(textsurf.get_rect(), self.pos, self.ref)
+        rect = ntris.position.rect_align(textsurf.get_rect(), self.pos, self.ref)
         if self.shade:
             textsurf2 = textsurf.copy()
             textsurf2.set_palette_at(1, [100,100,100])
@@ -87,7 +87,7 @@ class Text:
     def get_rect(self):
         rect = pygame.Rect((0,0), Text.FONT.size(self.text))
         rect.size = (rect.w*self.scale[0], rect.h*self.scale[1])
-        rect = position.rect_align(rect, self.pos, self.ref)
+        rect = ntris.position.rect_align(rect, self.pos, self.ref)
         return rect
     rect = property(get_rect)
 
@@ -109,11 +109,11 @@ class ScoreText(Text):
         self._digit_rect = pygame.Rect(0,0, max(widths), max(heights))
         self._shaded_text = Text("0", (0,0),
                                  color = tuple(x//2 for x in self.color),
-                                 ref   = position.Ref.BOTTOMRIGHT,
+                                 ref   = ntris.position.Ref.BOTTOMRIGHT,
                                  scale = self.scale)
         self._light_text  = Text("1", (0,0),
                                  color = self.color,
-                                 ref   = position.Ref.BOTTOMRIGHT,
+                                 ref   = ntris.position.Ref.BOTTOMRIGHT,
                                  scale = self.scale,
                                  shade = self.shade)
         
@@ -134,7 +134,7 @@ class ScoreText(Text):
     def get_rect(self):
         rect = self._digit_rect.copy()
         rect.w = rect.w * ScoreText.PADDING
-        rect = position.rect_align(rect, self.pos, self.ref)
+        rect = ntris.position.rect_align(rect, self.pos, self.ref)
         return rect
     rect = property(get_rect)
 
@@ -143,7 +143,7 @@ class FlashingText(Text):
     
     def __init__(self, txt, pos, **kwargs):
         super().__init__(txt, pos, **kwargs)
-        self.timer = kwargs.get("timer", utils.MultiShot(lambda t:None, 200, 7))
+        self.timer = kwargs.get("timer", ntris.utils.MultiShot(lambda t:None, 200, 7))
         self.color2 = kwargs.get("color2", None)
         if self.color2 is not None:
             self.color2 = pygame.Color(*self.color2)

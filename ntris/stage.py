@@ -21,15 +21,15 @@
 # SOFTWARE.
 
 import pygame
-import ui
-import utils
-from blocks import Block, BlockArray
+import ntris.ui
+import ntris.utils
+from ntris.blocks import Block, BlockArray
 
 
 def stage_dims(width):
     return (width, 3*width//2)
 
-class Stage(ui.Area):
+class Stage(ntris.ui.Area):
     
     class StageRowPending:
         def __init__(self, rows, done, stage):
@@ -46,7 +46,7 @@ class Stage(ui.Area):
                     stage.delete_rows(self.rows)
                     done()
                 self.step+= 1
-            self.timer = utils.NormalTimer(callback, 70.0)
+            self.timer = ntris.utils.NormalTimer(callback, 70.0)
             self.timer.activate()
             
         def update(self, dt):
