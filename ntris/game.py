@@ -26,6 +26,7 @@ from pygame.locals import *
 import stage
 import nmino
 import nminoctl
+import nminoprev
 import utils
 import position
 import ui
@@ -101,7 +102,8 @@ class nTrisMsg(Enum):
     DOWN          = 13,
     UP            = 14,
     RIGHT         = 15,
-    LEFT          = 16
+    LEFT          = 16,
+    DEBUG         = 17,
 
 class nTrisMenuDir(Enum):
     DOWN  = 1,
@@ -137,6 +139,7 @@ class nTrisBase(Game):
         self.msgmap[nTrisMsg.UP]     = lambda dn : self.select(nTrisMenuDir.UP)
         self.msgmap[nTrisMsg.RIGHT]  = lambda dn : self.select(nTrisMenuDir.RIGHT)
         self.msgmap[nTrisMsg.LEFT]   = lambda dn : self.select(nTrisMenuDir.LEFT)
+        self.msgmap[nTrisMsg.DEBUG]  = lambda dn : self.debug()
     
     def init_game_keymap(self):
         self.game_keymap = dict()
@@ -152,6 +155,7 @@ class nTrisBase(Game):
         self.game_keymap[K_SLASH]  = nTrisMsg.P2_ROT_CW
         self.game_keymap[K_p]      = nTrisMsg.PAUSE
         self.game_keymap[K_ESCAPE] = nTrisMsg.QUIT
+        self.game_keymap[K_SPACE]  = nTrisMsg.DEBUG
     
     def init_menu_keymap(self):
         self.menu_keymap = dict()
@@ -175,6 +179,7 @@ class nTrisBase(Game):
     select = noop
     move   = noop
     rot    = noop
+    debug  = noop
     
     def draw(self, screen):
         screen.blit(self.bg, (0,0))
@@ -184,13 +189,16 @@ class nTrisBase(Game):
     
 class nTrisPlayerCtl:
 
+    DN_FACTOR = 0.2
+    LR_FACTOR = 0.3
+
     def __init__(self, freq, placed_cb):
         self.score = 0
         self.lastmoves = (None, None)
         self.nmc = None
         self.movetimer = utils.NormalTimer(self._move_dn, freq)
-        self.lrtimer   = utils.NiceTimer(self._move_lr, freq*0.3, 0.6, 300.0)
-        self.downtimer = utils.NiceTimer(self._move_dn, freq*0.2, 0.7, 300.0)
+        self.lrtimer   = utils.NiceTimer(self._move_lr, freq*self.DN_FACTOR, 0.6, 300.0)
+        self.downtimer = utils.NiceTimer(self._move_dn, freq*self.LR_FACTOR, 0.7, 300.0)
         self.timers = (self.lrtimer, self.downtimer, self.movetimer)
         self.gameover = False
         self.placed = placed_cb
@@ -207,11 +215,11 @@ class nTrisPlayerCtl:
         else:
             self.lastmoves = (self.lastmoves[0], None)
         
-    def _move_lr(self):
+    def _move_lr(self, t=None):
         if self.nmc:
             self.nmc.move(self._get_lastmove())
     
-    def _move_dn(self):
+    def _move_dn(self, t=None):
         self.movetimer.reset()
         if self.nmc and not self.nmc.move(position.Dir.DOWN):
             col = self.nmc.nmino.color
@@ -238,7 +246,7 @@ class nTrisPlayerCtl:
     def rot(self, spin):
         if self.nmc:
             return self.nmc.rotate(spin)
-        return False
+        return None
     
     def take_nmino(self, nmc):
         self.nmc = nmc
@@ -256,8 +264,9 @@ class nTrisPlayerCtl:
         self.nmc = None
         
     def change_speed(self, freq):
-        for t in self.timers:
-            t.change_freq(freq)
+        self.movetimer.change_freq(freq)
+        self.lrtimer.change_freq(freq*self.LR_FACTOR)
+        self.downtimer.change_freq(freq*self.DN_FACTOR)
     
     def update(self, dt):
         for t in self.timers:
@@ -275,7 +284,7 @@ class nTris(nTrisBase):
     
     UI_MAIN_TOP = 15
     UI_MAIN_OFFSET = 20
-    UI_LVL_SIZE = (60,40)
+    UI_LVL_SIZE = (25,40)
     UI_SCORE_XOFFSET = 30
     UI_SCORE_YOFFSET = 15
     UI_PTS_OFFSET = 10
@@ -283,47 +292,101 @@ class nTris(nTrisBase):
     
     def __init__(self, screen):
         super().__init__(screen)
+        self.init_sounds()
         self.switch_keymap_game()
-        self.freq = self.DEF_FREQ
-        self.stage_axis = self.screen.get_size()[0]
+        
         self.stage = stage.Stage((self.STAGE_TOP,self.STAGE_XOFFSET),
                                  self.STAGE_WIDTH, 10)
-        self.player = nTrisPlayerCtl(self.freq, self.placed)
+        self.player = nTrisPlayerCtl(self.DEF_FREQ, self.placed)
         self.players = [self.player]
+        
         self.nmg = nmino.nMinoGen(4)
+        self.nmp = nminoprev.nMinoPrev(
+            ((self.STAGE_XOFFSET + self.STAGE_WIDTH + 40,
+                self.STAGE_TOP + 30),
+             (100,100)),
+            self.nmg)
         self.feed_nmino(self.player)
+        
         self.lvl = 1
+        self.freq = self.DEF_FREQ
+        self.threshold = 1000
         
         self.init_texts_1p()
         
+    
+    def init_sounds(self):
+        try:
+            self.sounds
+        except:
+            self.sounds = {
+                "blocked" : pygame.mixer.Sound("assets/sounds/blocked.wav"),
+                "rot"     : pygame.mixer.Sound("assets/sounds/rot.wav"),
+                "crash"   : pygame.mixer.Sound("assets/sounds/crash.wav"),
+                "pause"   : pygame.mixer.Sound("assets/sounds/pause.wav"),
+                "line"    : pygame.mixer.Sound("assets/sounds/line2.wav"),
+                "shake"   : pygame.mixer.Sound("assets/sounds/shake.wav")
+            }
+            self.sound_rel_volumes = {
+                "rot"     : 0.6,
+                "crash"   : 0.7
+            }
+            self.sounds_volume(1.0)
+            
+    def sounds_volume(self, vol):
+        for name, s in self.sounds.items():
+            s.set_volume(vol*self.sound_rel_volumes.get(name, 1.0))
     
     def init_texts_1p(self):
         rect = self.stage.rect
         rect.topleft = (self.UI_MAIN_OFFSET, rect.bottom + self.UI_MAIN_TOP)
         rect.size = self.UI_LVL_SIZE
         
-        self.text_ilvl = ui.Text("LVL",
-                                 rect.topleft,
-                                 color = [200,200,200])
+        self.main_top = rect.top
+        self.stage_axis = self.screen.get_size()[0]
+        self.text_ilvl = ui.Text(
+            "LVL",
+            rect.topleft,
+            color = [200,200,200]
+        )
         
-        self.text_vlvl = ui.Text(str(self.lvl),
-                                 rect.bottomright,
-                                 ref   = position.Ref.BOTTOMRIGHT,
-                                 scale = (3,4),
-                                 shade = True)
+        self.text_vlvl = ui.Text(
+            str(self.lvl),
+            rect.bottomright,
+            ref   = position.Ref.BOTTOMLEFT,
+            scale = (3,4),
+            shade = True
+        )
         
-        self.text_vpts = ui.ScoreText((self.stage_axis - self.UI_SCORE_XOFFSET,
-                                       rect.top + self.UI_SCORE_YOFFSET),
-                                      ref = position.Ref.TOPRIGHT,
-                                      scale = (2,2),
-                                      shade = True)
-        
+        self.text_vpts = ui.ScoreText(
+            (self.stage_axis - self.UI_SCORE_XOFFSET,
+             rect.top + self.UI_SCORE_YOFFSET),
+            ref = position.Ref.TOPRIGHT,
+            scale = (2,2),
+            shade = True
+        )
+        self.text_vpts.score = self.player.score
+
         rect_score = self.text_vpts.rect
-        self.text_ipts = ui.Text("PTS",
-                                 (rect_score.left - self.UI_PTS_OFFSET, rect.top),
-                                 color = [200,200,200])
-        
-        self.textcollection_small = utils.TimedSet()
+        self.text_ipts = ui.Text(
+            "PTS",
+            (rect_score.left - self.UI_PTS_OFFSET, rect.top),
+            color = [200,200,200]
+        )
+        self.set_name()
+        self.text_timerset = utils.TimedSet()
+    
+    def set_name(self, flash=False):
+        full_width = self.text_vpts.rect.left+self.text_vlvl.rect.right
+        self.text_ntris = ui.FlashingText(self.nmg.name(),
+                                          (full_width//2, self.main_top + self.UI_SCORE_YOFFSET),
+                                          ref = position.Ref.MIDCENTER,
+                                          scale = (2,2),
+                                          shade = True)
+        if self.text_ntris.rect.width > full_width:
+            self.text_ntris.scale = (1,1)
+        if flash:
+            self.text_ntris.flash()
     
     def move(self, player, keydown, dir):
         if player < len(self.players):
@@ -332,7 +395,12 @@ class nTris(nTrisBase):
     def rot(self, player, keydown, spin):
         if keydown:
             if player < len(self.players):
-                self.players[player].rot(spin)
+                res = self.players[player].rot(spin)
+                if res is not None:
+                    if res:
+                        self.sounds["rot"].play()
+                    else:
+                        self.sounds["blocked"].play()
     
     def placed(self, player, loc, color):
         rows = {y for x,y in loc}
@@ -341,50 +409,69 @@ class nTris(nTrisBase):
         t        = rows_min/self.stage.gridsize[1] #[0,1)
         rect     = self.stage.rect
         y        = int(t*rect.bottom + (1-t)*rect.top)
-        textpos = (self.stage.rect.right + self.UI_OFFSTAGE_OFFSET, y)
+        textpos  = (self.stage.rect.right + self.UI_OFFSTAGE_OFFSET, y)
+        
+        def proc(pts, col, time):
+            player.grant_points(pts)
+            self.text_vpts.score = self.player.score
+            if player.score >= self.threshold:
+                self.lvlup()
+            self.feed_nmino(player)
+            text    = ui.Text(str(pts), textpos,
+                          color = col,
+                          ref = position.Ref.MIDLEFT)
+            self.text_timerset.add(text, time)
         
         full = self.stage.get_full_rows(rows)
         if full:
             pts = self.PTS_ROW*len(full)
-            col = color
-            time = 1000
-            def after():
-                self.feed_nmino(player)
-                player.grant_points(pts)
-                text    = ui.Text(str(pts), textpos,
-                              color = col,
-                              ref = position.Ref.MIDLEFT)
-                self.textcollection_small.add(text, time)
-            self.stage.anim_delete(full, done = after)
+            self.sounds["line"].play()
+            self.stage.anim_delete(full, done = lambda: proc(pts, color, 1000))
         else:
             pts = self.PTS_PLACE
             col = [255,255,255]
-            time = 500
-            player.grant_points(self.PTS_PLACE)
-            self.feed_nmino(player)
-            text    = ui.Text(str(pts), textpos,
-                              color = col,
-                              ref = position.Ref.MIDLEFT)
-            self.textcollection_small.add(text, time)
+            proc(pts, col, 500)
+            self.sounds["crash"].play()
     
     def feed_nmino(self, player):
-        nm = self.nmg.generate()
+        nm = self.nmp.get()
         try:
             nmc = nminoctl.nMinoCtl(nm, self.stage)
             player.take_nmino(nmc)
         except nminoctl.GameOver:
             player.game_over()
+    
+    def lvlup(self):
+        self.threshold += 1500 if self.lvl == 1 else 2500
+        self.lvl += 1
+        self.text_vlvl.text = str(self.lvl)
+        
+        q,r = divmod(self.lvl-1, 3)
+        f   = 1.3**((q + r))
+        self.freq = self.DEF_FREQ / f
+        for p in self.players:
+            p.change_speed(self.freq)
+        
+        if not r:
+            self.stage.expand(1)
+            self.nmg.lvlup()
+            self.set_name(True)
+        self.sounds["shake"].play()
+            
+    def debug(self):
+        self.player.score = self.threshold - 10
 
     def update(self, dt):
         self.stage.update(dt)
         for p in self.players:
             p.update(dt)
-        self.text_vpts.score = self.player.score
-        self.textcollection_small.tick(dt)
+        self.text_timerset.tick(dt)
+        self.text_ntris.tick(dt)
     
     def draw(self, screen):
         screen.blit(self.bg, (0,0))
         self.stage.draw(screen)
+        self.nmp.draw(screen)
         for p in self.players:
             if p.nmc:
                 p.nmc.draw(screen)
@@ -393,5 +480,6 @@ class nTris(nTrisBase):
         self.text_vlvl.draw(screen)
         self.text_vpts.draw(screen)
         self.text_ipts.draw(screen)
-        for txt in self.textcollection_small:
+        self.text_ntris.draw(screen)
+        for txt in self.text_timerset:
             txt.draw(screen)

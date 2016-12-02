@@ -39,7 +39,7 @@ class TimerTrigger:
     def __init__(self, trigger, freq, onset = 0.0, mod = None):
         self.trigger = trigger
         self.def_freq = freq
-        self.freq = freq
+        self._freq = freq
         self.onset = onset
         self.mod = mod if mod else lambda x: self.def_freq
         self.time = 0.0
@@ -67,18 +67,38 @@ class TimerTrigger:
                 if self.time > self.onset:
                     self.time-= self.onset
                     self.set = True
-                    self.trigger()
+                    self.trigger(self)
             else:
-                while self.time > self.freq:
-                    self.time-= self.freq
-                    self.freq = self.mod(self.freq)
-                    self.trigger()
+                while self.time > self._freq:
+                    self.time-= self._freq
+                    self._freq = self.mod(self._freq)
+                    self.trigger(self)
     
     def reset(self):
-        self.freq = self.def_freq
+        self._freq = self.def_freq
         self.set = False
         self.time = 0.0
         return self
+    
+    def hook(self, trig):
+        old = self.trigger
+        def new(t):
+            trig(t)
+            old(t)
+        self.trigger = new
+        
+    @property
+    def freq(self):
+        return self.def_freq
+    
+    @freq.setter
+    def set_freq(self, freq):
+        self.change_freq(freq)
+    
+    def change_freq(self, freq):
+        self.def_freq = freq
+        return self
+    
 
 class NiceTimer(TimerTrigger):
     def __init__(self, trigger, freq, q=0.9, onset=None):
@@ -104,18 +124,18 @@ class MultiShot(NormalTimer):
     def __init__(self, trigger, freq, n=1):
         self.max = n
         self.n = 0
-        def real_trigger():
-            if self.n < self.max:
-                trigger()
-                self.n+= 1
+        def real_trigger(t):
+            if t.n < t.max:
+                trigger(t)
+                t.n+= 1
             else:
-                self.deactivate()
+                t.deactivate()
         super().__init__(real_trigger, freq)
 
         
         
 class TimedSet(set):
-    def add(self, x, time, trigger=lambda: None):
+    def add(self, x, time, trigger=lambda t: None):
         t = time if isinstance(time, TimerTrigger) else MultiShot(trigger, time)
         t.activate()
         super().add((x,t))
@@ -132,4 +152,5 @@ class TimedSet(set):
     
     def __iter__(self):
         for x,t in super().__iter__():
-            yield x
+            if x is not None:
+                yield x

@@ -1,0 +1,2 @@
+These sounds were wade with FamiTracker 0.4.6 and are licensed under CC0 1.0
+Universal. Copyright (c) Marcin Zubilewicz, 2016.

@@ -82,9 +82,9 @@ class Block:
         else:
             col, *_ = args
             self.set_color(col)
-        self.shaded = False
-        self.flashing = False
-        self.scale = 1.0
+            self.shaded = False
+            self.flashing = False
+            self.scale = 1.0
     
     def draw(self, surface):
         wh = surface.get_size()
@@ -158,15 +158,16 @@ class BlockArray:
             raise ValueError("cannot expand BlockArray by " +
                              "{} (use a pair of positive integers)".format(by))
         sx, sy = self.size
+        copy = lambda x: [Block(b) if b else None for b in x]
         for i,a in enumerate(self.array):
             a = a.copy()
             copies, rest = divmod(byx, sx)
             first = -byx + copies * sx
             last  =  byx + copies * (sx+1)
-            self.array[i].extend(a*copies)
-            self.array[i][:0] = a*copies
-            self.array[i].extend(a[:rest])
-            self.array[i][:0] = a[-rest:]
+            self.array[i].extend(sum([copy(a) for i in range(copies)], []))
+            self.array[i][:0] =  sum([copy(a) for i in range(copies)], [])
+            self.array[i].extend(copy(a[:rest]))
+            self.array[i][:0] =  copy(a[-rest:])
         self.array[:0] = [[None]*(sx+2*byx) for x in range(byy)]
         self.size = (sx+2*byx, sy+byy)
     

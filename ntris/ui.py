@@ -33,7 +33,7 @@ class Area:
     BD_COL2 = [x//2 for x in BD_COL]
 
     def __init__(self, rect):
-        self._rect = rect
+        self._rect = pygame.Rect(rect)
     
     def draw(self, screen):
         temprect = position.rect_inflate(self._rect, 2, 2)
@@ -133,3 +133,29 @@ class ScoreText(Text):
         rect = position.rect_align(rect, self.pos, self.ref)
         return rect
     rect = property(get_rect)
+
+    
+class FlashingText(Text):
+    
+    def __init__(self, txt, pos, **kwargs):
+        super().__init__(txt, pos, **kwargs)
+        self.timer = kwargs.get("timer", utils.MultiShot(lambda t:None, 200, 7))
+        self.timer.hook(lambda t: self.action(t))
+        self.render = True
+    
+    def action(self, timer):
+        self.render ^= True
+        
+    def draw(self, surface):
+        if self.render:
+            super().draw(surface)
+    
+    def flash(self):
+        self.timer.reset().activate()
+    
+    def tick(self, dt):
+        self.timer.tick(dt)
+    
+    def stop(self):
+        self.timer.deactivate()
+        self.render = True

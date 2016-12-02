@@ -35,16 +35,16 @@ class Stage(ui.Area):
         def __init__(self, rows, done, stage):
             self.rows = rows
             self.step = 0
-            def callback():
+            def callback(t=None):
                 for r in rows:
                     for b in stage.block_array[r]:
                         if b:
                             b.flash()
                 if self.step == 4:
-                    done()
                     self.timer.deactivate()
                     stage.pending.remove(self)
                     stage.delete_rows(self.rows)
+                    done()
                 self.step+= 1
             self.timer = utils.NormalTimer(callback, 70.0)
             self.timer.activate()
@@ -64,7 +64,7 @@ class Stage(ui.Area):
         
         gridsize  = stage_dims(grid_width)
         self.block_array = BlockArray(gridsize, self._rect)
-        self.pending = []
+        self.pending     = []
 
     def stage2screen(self, *args):
         """
@@ -101,7 +101,9 @@ class Stage(ui.Area):
     
     def anim_delete(self, rows, done):
         self.pending.append(Stage.StageRowPending(rows, done, self))
-
+    
+    def expand(self, by):
+        self.block_array.expand((by,3*by))
         
     def update(self, dt):
         for p in self.pending:

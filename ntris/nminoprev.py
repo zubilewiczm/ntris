@@ -20,39 +20,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import itertools
-
 import pygame
-from pygame.locals import *
+import ui
+import position
+import nmino as nm
 
-import blocks as blk
-from game import nTris
-import nmino
-
-SCR_WIDTH = 500
-SCR_HEIGHT = 540
-FPS = 60
-
-def main():
-    pygame.mixer.pre_init(44100)
-    pygame.init()
-    screen = pygame.display.set_mode((SCR_WIDTH, SCR_HEIGHT))
-    pygame.display.set_caption("ntris")
+class nMinoPrev(ui.Area):
     
-    clock  = pygame.time.Clock()
-    game   = nTris(screen)
+    def __init__(self, rect, gen, margin=10):
+        super().__init__(rect)
+        if not isinstance(gen, nm.nMinoGen):
+            TypeError("nMinoGen expected as second argument")
+        self.nminogen = gen
+        self.nmino = None
+        self.margin = margin
+        self._draw_rect = None
+        self.get()
     
-    going = True
-    while going:
-        dt = clock.tick(FPS)
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                going = False
-            else:
-                game.event(event)
-        game.tick(dt)
-        pygame.display.flip()
-    pygame.quit()
-
-if __name__ == "__main__":
-    main()
+    def draw(self, surface):
+        super().draw(surface)
+        self.nmino.draw(surface.subsurface(self._draw_rect))
+        
+    def get(self):
+        ret = self.nmino
+        self.nmino = self.nminogen.generate()
+        
+        max = self.nminogen.max_size()
+        temprect = position.rect_inflate(self._rect, -self.margin, -self.margin)
+        size = min(temprect.size)//max
+        
+        bounds = self.nmino.bounds()
+        n,m = bounds.size
+        bounds.size = n*size, m*size
+        bounds.center = self._rect.center
+        
+        self._draw_rect = bounds
+        return ret

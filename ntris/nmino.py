@@ -30,16 +30,16 @@ class nMino:
     def __init__(self, *args):
         if isinstance(args[0], nMino):
             self.components = args[0].components.copy()
-            self.color = args[0].color
+            self.color = pygame.Color(*args[0].color)
         else:
             if len(args) == 2:
                 if not self.is_valid_set(args[1]):
-                    raise ValueError("second argument is not a set of ints")
+                    raise TypeError("second argument is not a set of ints")
                 self.components = args[1]
             elif len(args) == 1:
                 self.components = set()
             else:
-                raise ValueError("expected 1 or 2 arguments, got {}".format(len(args)))
+                raise TypeError("expected 1 or 2 arguments, got {}".format(len(args)))
             self.normalize()
             self.color = pygame.Color(*args[0])
     
@@ -73,7 +73,7 @@ class nMino:
         cx = sum(v[0] for v in self.components)
         cy = sum(v[1] for v in self.components)
         n = len(self.components)
-        return cx/n, cy/n
+        return (cx/n, cy/n) if n else (0.0,0.0)
     
     def barycenter(self):
         bx, by = self.fbarycenter()
@@ -114,7 +114,49 @@ class nMino:
         for block, rect in self.blocks(((0,0), surface.get_size())):
             block.draw(surface.subsurface(rect))
 
-
+names = {"1"   : "MONO",
+         "2"   : "DI",
+         "3"   : "TRI",
+         "4"   : "TETRA",
+         "5"   : "PENTA",
+         "6"   : "HEXA",
+         "7"   : "HEPTA",
+         "8"   : "OCTA",
+         "9"   : "NONA",
+         "10"  : "DECA",
+         "11"  : "UNDECA",
+         "12"  : "DODECA",
+         "13"  : "TRIDECA",
+         "14"  : "TETRADECA",
+         "15"  : "PENTADECA",
+         "16"  : "HEXADECA",
+         "17"  : "HEPTADECA",
+         "18"  : "OCTADECA",
+         "19"  : "NONADECA",
+         "20"  : "ICOSA",
+         "21"  : "HENICOSA",
+         "22"  : "DOCOSA",
+         "23"  : "TRICOSA",
+         "30"  : "TRIACONTA",
+         "31"  : "HENTRIACONTA",
+         "32"  : "DOTRIACONTA",
+         "40"  : "TETRACONTA",
+         "50"  : "PENTACONTA",
+         "60"  : "HEXACONTA",
+         "70"  : "HEPTACONTA",
+         "80"  : "OCTACONTA",
+         "90"  : "NONACONTA",
+         "100" : "HECTA",
+         "200" : "DICTA",
+         "300" : "TRICTA",
+         "400" : "TETRACTA",
+         "500" : "PENTACTA",
+         "600" : "HEXACTA",
+         "700" : "HEPTACTA",
+         "800" : "OCTACTA",
+         "900" : "NONACTA" }
+            
+            
 class nMinoGen:
     TOOCOMPLEX = 8
     S,V = 100, 80
@@ -174,8 +216,8 @@ class nMinoGen:
     
     def generate_inaccurate(self):
         h = random.random()*360
-        c = pygame.Color(255)
-        c.hsva = h, nMinoGen.S, nMinoGen.V
+        c = pygame.Color(255,255,255,255)
+        c.hsva = h, nMinoGen.S, nMinoGen.V, 100
         m = nMino(c)
         m.add((0,0))
         d = []
@@ -208,3 +250,23 @@ class nMinoGen:
     def update_colors(self):
         self.colors = {p : utils.hsv(i, len(self.patterns), 100,100)
             for i,p in enumerate(self.patterns)}
+    
+    def max_size(self):
+        return self.ncomps
+    
+    def name(self):
+        if self.ncomps >= 1000:
+            return str(self.ncomps)+"-IS"
+        else:
+            s = str(self.ncomps)
+            ret = ""
+            while s:
+                if s in names:
+                    ret = names[s]+ret
+                    break
+                else:
+                    if s[0] != "0":
+                        ret = names[s[0]+"0"*(len(s)-1)] + ret
+                    s = s[1:]
+            ret = ret[0:-1]+"IS"
+            return ret
