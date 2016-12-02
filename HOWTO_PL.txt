@@ -7,6 +7,8 @@ nTris -- klon Tetrisa z drobnym twistem.
   punkty. Jeœli klocki wype³ni¹ ca³¹ planszê, gra siê koñczy -- przetrwaj wiêc
   jak najd³u¿ej!
   
+  Pytanie: gdzie jest ten twist? Aby siê dowiedzieæ, przekrocz granicê 5000 pkt!
+  
 2) Sterowanie.
 
   A   : ruch w lewo
@@ -16,3 +18,5 @@ nTris -- klon Tetrisa z drobnym twistem.
   B   : obrót zgodnie z ruchem wskazówek zegara
   P   : pauza
   ESC : wyjœcie z gry
+
+3) Aby zacz¹æ zabawê, uruchom ntris.py. Powodzenia!
