@@ -2,21 +2,21 @@ nTris -- klon Tetrisa z drobnym twistem.
 
 1) Zasady gry.
 
-  Przesuwaj i obracaj spadaj¹ce z nieba klocki w taki sposób, by u³o¿yæ z nich
-  poziom¹ liniê. Gdy ju¿ Ci siê uda, linia zniknie, a tobie zostan¹ przyznane
-  punkty. Jeœli klocki wype³ni¹ ca³¹ planszê, gra siê koñczy -- przetrwaj wiêc
-  jak najd³u¿ej!
+  Przesuwaj i obracaj spadajÄ…ce z nieba klocki w taki sposÃ³b, by uÅ‚oÅ¼yÄ‡ z nich
+  poziomÄ… liniÄ™. Gdy juÅ¼ Ci siÄ™ uda, linia zniknie, a tobie zostanÄ… przyznane
+  punkty. JeÅ›li klocki wypeÅ‚niÄ… caÅ‚Ä… planszÄ™, gra siÄ™ koÅ„czy â€“ przetrwaj wiÄ™c
+  jak najdÅ‚uÅ¼ej!
   
-  Pytanie: gdzie jest ten twist? Aby siê dowiedzieæ, przekrocz granicê 5000 pkt!
+  Pytanie: gdzie jest ten twist? Aby siÄ™ dowiedzieÄ‡, przekrocz granicÄ™ 1500 pkt!
   
 2) Sterowanie.
 
   A   : ruch w lewo
-  S   : ruch w dó³
+  S   : ruch w dÃ³Å‚
   D   : ruch w prawo
-  V   : obrót przeciwnie do ruchu wskazówek zegara
-  B   : obrót zgodnie z ruchem wskazówek zegara
+  V   : obrÃ³t przeciwnie do ruchu wskazÃ³wek zegara
+  B   : obrÃ³t zgodnie z ruchem wskazÃ³wek zegara
   P   : pauza
-  ESC : wyjœcie z gry
+  ESC : wyjÅ›cie z gry
 
-3) Aby zacz¹æ zabawê, uruchom ntris.py. Powodzenia!
+3) Aby zaczÄ…Ä‡ zabawÄ™, uruchom ntris.py. Powodzenia!

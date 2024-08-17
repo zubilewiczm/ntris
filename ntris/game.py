@@ -153,6 +153,7 @@ class nTrisBase(Game):
         self.game_keymap[K_SLASH]  = nTrisMsg.P2_ROT_CW
         self.game_keymap[K_p]      = nTrisMsg.PAUSE
         self.game_keymap[K_ESCAPE] = nTrisMsg.QUIT
+        self.game_keymap[K_MINUS]  = nTrisMsg.DEBUG
     
     def init_menu_keymap(self):
         self.menu_keymap = dict()
@@ -312,7 +313,7 @@ class nTris(nTrisBase):
             
             self.lvl = 1
             self.freq = self.DEF_FREQ
-            self.threshold = 1000
+            self.threshold = 300
             
             self.init_texts()
         
@@ -450,12 +451,12 @@ class nTris(nTrisBase):
                     self.game.state = self.game.GameOverState(self.game, self)
         
         def lvlup(self):
-            self.threshold += [1000, 1500, 2500][self.lvl % 3]
+            self.threshold += [300, 500, 700][self.lvl % 3]
             self.lvl += 1
             self.text_vlvl.text = str(self.lvl)
             
             q,r = divmod(self.lvl-1, 3)
-            f   = 1.3**((q + r))
+            f   = 1.2**(0.25*q + r)
             self.freq = self.DEF_FREQ / f
             for p in self.players:
                 p.change_speed(self.freq)

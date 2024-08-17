@@ -2,15 +2,15 @@ nTris -- a clone of Tetris with a twist.
 
 1) The rules
 
-  Move and rotate falling blocks to fill the game area in a way, to arrange
-  them in horizontal lines without any holes. Every such line will be erased,
-  granting you a few points and making more room to maneuver. If blocks fill
-  the stage entirely, they'll prevent another block from
-  appearing -- is that case the game ends. Your goal is to survive as
-  long as you can and earn as much points as possible!
+  Move and rotate falling blocks to fill out the well by arranging them in
+  horizontal lines without any holes. Every such line will be erased, granting
+  you a few points and making more room to maneuver. If blocks fill the stage
+  entirely, they'll prevent another block from appearing, ending the game. Your
+  goal is to survive for as long as you can and earn as much points as
+  possible!
   
-  You probably ask yourself: where's the twist then? It's a surprise -- you'll
-  know when you gather more than 5000 points in one go!
+  You probably ask yourself: where's the twist then? It's a surprise! You'll
+  know when you gather more than 1500 points in one go!
   
 2) Controls
 
